@@ -1,6 +1,6 @@
 function smoothScroll(target, duration) {
    // 移動先のDOM取得
-   let targetElm =  target === 'body' ? document.body : document.querySelector(target);
+   let targetElm =  target === '#' ? document.body : document.querySelector(target);
    // 移動先の位置
    let targetPosition = targetElm.getBoundingClientRect().top;
    // 今のスクロール値
