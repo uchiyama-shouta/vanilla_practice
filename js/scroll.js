@@ -5,7 +5,7 @@ function smoothScroll(target, duration) {
    let targetPosition = targetElm.getBoundingClientRect().top;
    // 今のスクロール値
    let startPosition = window.pageYOffset;
-   var startTime = null;
+   let startTime = null;
 
    function animation(currentTime) {
       if(startTime === null) startTime = currentTime;
