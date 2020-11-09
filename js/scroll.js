@@ -8,7 +8,9 @@ function smoothScroll(target, duration) {
    let startTime = null;
 
    function animation(currentTime) {
-      if(startTime === null) startTime = currentTime;
+      if(startTime === null) {
+         startTime = currentTime;
+      }
       // 経過時間？
       let timeElapsed = currentTime - startTime;
       let run = ease(timeElapsed, startPosition, targetPosition, duration);
