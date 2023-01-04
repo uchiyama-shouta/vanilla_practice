@@ -1,3 +1,5 @@
+// 未使用
+
 function smoothScroll(target, duration) {
    // 移動先のDOM取得
    let targetElm =  target === '#' ? document.body : document.querySelector(target);

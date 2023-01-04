@@ -1,4 +1,4 @@
-"use strict";
+import { fadeIn, fadeOut, myFadeToggle } from "./fade.js"
 
 /* =================== */
 /*        wipein       */
@@ -15,79 +15,55 @@ window.addEventListener('DOMContentLoaded', () => {
 /* =================== */
 
 const backToTop = document.getElementById("back-to-top");
+const header = document.querySelector("header");
 
-window.addEventListener("scroll", function () {
-  let scrollValue = window.pageYOffset;
-  let windowHeight = window.innerHeight;
-
-  if (scrollValue >= windowHeight) {
-    backToTop.classList.add("in");
-  } else {
+const ioTop = new IntersectionObserver((entries) => {
+  if (entries[0].isIntersecting) {
+    header.classList.remove("fix");
     backToTop.classList.remove("in");
+  } else {
+    header.classList.add("fix");
+    backToTop.classList.add("in");
   }
 });
 
-backToTop.addEventListener('click', () => {
-  smoothScroll('body', 700)
-})
+ioTop.observe(document.getElementById("top"))
 
 /* =================== */
 /*   	  hamburger      */
 /* =================== */
 const headerNav = document.querySelector(".header-nav");
 
-function widthCheck() {
-  if (window.innerWidth < 900) {
-    headerNav.style.display = "none";
-  } else {
-    headerNav.style.display = "block";
-  }
-}
-
-widthCheck();
-window.addEventListener("resize", () => {
-  widthCheck();
-});
-
 const hamburger = document.getElementById("hamburger");
-const fadeToggle = () => {
-  if (window.innerWidth < 900) {
-    myFadeToggle(headerNav, 500);
+let open = false;
+
+hamburger.addEventListener("click", (e) => {
+  if(open === false) {
+    fadeIn(headerNav, 500)
+    open = true;
+    e.target.classList.add("active");
+    document.body.classList.add("hidden");
+  } else {
+    if(window.innerWidth <= 900) {
+      fadeOut(headerNav, 500)
+    }
+    open = false;
+    e.target.classList.remove("active");
+    document.body.classList.remove("hidden");
   }
-};
-hamburger.addEventListener("click", function () {
-  fadeToggle();
-  this.classList.toggle("active");
-  document.body.classList.toggle("hidden");
 });
 
-document.querySelectorAll(".top a").forEach(function(a) {
+document.querySelectorAll(".top a").forEach((a) => {
   // 押した後のエフェクト
-  a.addEventListener("click", function(e){
-    e.preventDefault();
+  a.addEventListener("click", () => {
     hamburger.classList.remove("active");
-    fadeToggle();
+    if(window.innerWidth <= 900) {
+      fadeOut(headerNav, 500)
+    }
     document.body.classList.remove("hidden");
-    // スクロール
-    let id = e.target.getAttribute("href");
-    smoothScroll(id, 700)
   });
 });
 
-/* =================== */
-/*    	  header       */
-/* =================== */
-window.addEventListener("scroll", function () {
-  let scrollValue = this.pageYOffset;
-  let windowHeight = this.innerHeight;
-
-  const header = document.querySelector("header");
-  if (scrollValue >= windowHeight) {
-    header.classList.add("fix");
-  } else {
-    header.classList.remove("fix");
-  }
-});
 /* =================== */
 /*   	  slideshow      */
 /* =================== */
@@ -100,8 +76,8 @@ const showTime = 3500; // 3s
 
 const slideShow = () => {
   nextPage = (nowPage + 1) % slideLength;
-  myFadeOut(slides[nowPage], 2000);
-  myFadeIn(slides[nextPage], 2000);
+  fadeOut(slides[nowPage], 2000);
+  fadeIn(slides[nextPage], 2000);
   nowPage = nextPage;
 };
 
@@ -125,45 +101,56 @@ const callback = (entries, observer) => {
 const option = {
   rootMargin: "0px 0px -300px 0px",
 };
-const io = new IntersectionObserver(callback, option);
+const ioSlide = new IntersectionObserver(callback, option);
 triggers.forEach((elm) => {
   // 監視対象として登録
-  io.observe(elm);
+  ioSlide.observe(elm);
 });
 
 /* =================== */
 /*    carousel panel   */
 /* =================== */
 
-const carouselWidth = document.querySelector("#carousel li").clientWidth;//
+const carouselWidth = document.querySelector("#carousel li").clientWidth;
 const length = document.querySelectorAll(".carousel-item").length;
-const innerWidth = carouselWidth * length;//
-// アニメーションの時間
-const time = 400;
-//ul
-const carouselinner = document.getElementById("carousel");
+const innerWidth = carouselWidth * length;
+
+const carouselinner = document.getElementById("carousel"); // ul
 // prevのDOM取得
 const prev = document.getElementById("prev");
 // nextのDOM取得
 const next = document.getElementById("next");
-// currentの頭文字
+
 let c = 1;
-prev.addEventListener("click", () => {
-  const options = {
-    duration: time,
-    fill: 'forwards',
-    easing: 'ease'
-  }
-  if (c === 1) {
+
+const options = {
+  duration: 400,
+  fill: 'forwards',
+  easing: 'ease'
+}
+
+const slide = {
+  firstPosition: '0px, 0px, 0px',
+  lastPosition : `${-innerWidth + carouselWidth}px, 0px, 0px`,
+  toFirst: () => {
     carouselinner.animate({
       transform: [
-        'translate3d(0px, 0px, 0px)',
-        `translate3d(${-innerWidth + carouselWidth}px, 0px, 0px)`
+        `translate3d(${slide.lastPosition})`,
+        `translate3d(${slide.firstPosition})`,
       ]
     },options)
-    // 7
+    c = 1;
+  },
+  toLast: () => {
+    carouselinner.animate({
+      transform: [
+        `translate3d(${slide.firstPosition})`,
+        `translate3d(${slide.lastPosition})`,
+      ]
+    },options)
     c = length;
-  } else {
+  },
+  toPrev: () => {
     carouselinner.animate({
       transform: [
         // 相対位置ではなく、絶対位置に移動する。
@@ -172,24 +159,8 @@ prev.addEventListener("click", () => {
       ]
     },options)
     c--;
-  }
-});
-
-next.addEventListener("click", () => {
-  const options = {
-    duration: time,
-    fill: 'forwards',
-    easing: 'ease'
-  }
-  if (c === length) {
-    carouselinner.animate({
-      transform: [
-        `translate3d(${-innerWidth + carouselWidth}px, 0px, 0px)`,
-        'translate3d(0px, 0px,0px)'
-      ]
-    },options)
-    c = 1;
-  } else {
+  },
+  toNext: () => {
     carouselinner.animate({
       transform: [
         // 相対位置ではなく、絶対位置に移動する。
@@ -201,18 +172,33 @@ next.addEventListener("click", () => {
     },options)
     c++
   }
+}
+
+prev.addEventListener("click", () => {
+  if (c === 1) {
+    slide.toLast()
+  } else {
+    slide.toPrev()
+  }
+});
+
+next.addEventListener("click", () => {
+  if (c === length) {
+    slide.toFirst()
+  } else {
+    slide.toNext()
+  }
 });
 
 /* =================== */
 /*       parallax      */
 /* =================== */
 
-const parallaxs = document.querySelectorAll('.parallax');
-window.addEventListener('scroll', function() {
-  let scrollValue = -this.pageYOffset / 50;
-  
-  parallaxs.forEach(elm => {
+const parallaxes = document.querySelectorAll('.parallax');
+window.addEventListener('scroll', () => {
+  let scrollValue = -window.scrollY / 50;
+
+  parallaxes.forEach(elm => {
     elm.style.transform = `translateY(${scrollValue}%)`;
   })
 })
-
